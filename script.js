@@ -23,6 +23,7 @@ let listArrays = [];
 // Drag Functionality
 let draggedItem;
 let currentColumn;
+let dragging = false;
 
 // Get Arrays from localStorage if available, set default values if not
 function getSavedColumns() {
@@ -52,6 +53,13 @@ function updateSavedColumns() {
   // localStorage.setItem('onHoldItems', JSON.stringify(onHoldListArray));
 }
 
+// Filter Arrays to remove empty items
+function filterArray(array){
+  console.log(array);
+  const filteredArray = array.filter(item => item !== null);
+  return filteredArray;
+}
+
 // Create DOM Elements for each list item
 function createItemEl(columnEl, column, item, index) {
   // console.log('columnEl:', columnEl);
@@ -64,6 +72,9 @@ function createItemEl(columnEl, column, item, index) {
   listEl.textContent = item;
   listEl.draggable = true;
   listEl.setAttribute('ondragstart', 'drag(event)');
+  listEl.contentEditable = true;
+  listEl.id = index;
+  listEl.setAttribute('onfocusout',`updateItem(${index}, ${column})`);
   //Append
   columnEl.appendChild(listEl); 
 }
@@ -79,34 +90,106 @@ function updateDOM() {
   backlogListArray.forEach((backlogItem, index) => {
     createItemEl(backlogList, 0, backlogItem, index);
   });
+  backlogListArray = filterArray(backlogListArray);
 
   // Progress Column
   progressList.textContent = '';
   progressListArray.forEach((progressItem, index) => {
-    createItemEl(progressList, 0, progressItem, index);
+    createItemEl(progressList, 1, progressItem, index);
   });
+  progressListArray = filterArray(progressListArray);
 
   // Complete Column
   completeList.textContent = '';
   completeListArray.forEach((completeItem, index) => {
-    createItemEl(completeList, 0, completeItem, index);
+    createItemEl(completeList, 2, completeItem, index);
   });
+  completeListArray = filterArray(completeListArray);
 
   // On Hold Column
   onHoldList.textContent = '';
   onHoldListArray.forEach((onholdItem, index) => {
-    createItemEl(onHoldList, 0, onholdItem, index);
+    createItemEl(onHoldList, 3, onholdItem, index);
   });
+  onHoldListArray = filterArray(onHoldListArray);
 
   // Run getSavedColumns only once, Update Local Storage
+  updatedOnLoad = true;
+  updateSavedColumns();
+}
 
+// Update Item - Delete or Update the Array value
+function updateItem(id, column){
+  const selectedArray = listArrays[column];
+  console.log(selectedArray);
+  const selectedColumnEl = listColumns[column].children;
+  console.log(selectedColumnEl[id].textContent);
+  if (!dragging){
+    if(!selectedColumnEl[id].textContent){
+      delete selectedArray[id];
+    }
+    else{
+      selectedArray[id] = selectedColumnEl[id].textContent;
+    }
+  
+    updateDOM();
+  }
+}
 
+// Add to Column List, Reset Textbox
+function addToColumn(column){
+  const itemText = addItems[column].textContent;
+  const selectedArray = listArrays[column];
+  selectedArray.push(itemText);
+  addItems[column].textContent = '';
+  updateDOM();
+}
+
+// Show Add Items input box
+function showInputBox(column){
+  addBtns[column].style.visibility = 'hidden';
+  saveItemBtns[column].style.display = 'flex';
+  addItemContainers[column].style.display = 'flex';
+}
+
+// Hide Item Input Box
+function hideInputBox(column){
+  addBtns[column].style.visibility = 'visible';
+  saveItemBtns[column].style.display = 'none';
+  addItemContainers[column].style.display = 'none';
+  addToColumn(column);
+}
+
+// Allow Arrays to reflect Dragged & Droped Items
+function rebuildArrays(){
+  backlogListArray = [];
+  progressListArray = [];
+  completeListArray = [];
+  onHoldListArray = [];
+
+  for (let i=0; i < backlogList.children.length; i++){
+    backlogListArray.push(backlogList.children[i].textContent);
+  }
+
+  for (let i=0; i < progressList.children.length; i++){
+    progressListArray.push(progressList.children[i].textContent);
+  }
+
+  for (let i=0; i < completeList.children.length; i++){
+    completeListArray.push(completeList.children[i].textContent);
+  }
+
+  for (let i=0; i < onHoldList.children.length; i++){
+    onHoldListArray.push(onHoldList.children[i].textContent);
+  }
+
+  updateDOM();
 }
 
 // When item starts dragging
 function drag(e){
   draggedItem = e.target;
-  console.log('Dragged Item: ', draggedItem);
+  dragging = true;
 }
 
 // Columns Allows for the item to be dropped
@@ -131,9 +214,12 @@ function drop(e){
   // Add Item to Column
   const parent = listColumns[currentColumn];
   parent.appendChild(draggedItem);
+
+  // Dragging complete
+  dragging = false;  
+
+  rebuildArrays();
 }
-
-
 
 //On Load
 updateDOM();
