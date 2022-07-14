@@ -162,26 +162,35 @@ function hideInputBox(column){
 
 // Allow Arrays to reflect Dragged & Droped Items
 function rebuildArrays(){
-  backlogListArray = [];
-  progressListArray = [];
-  completeListArray = [];
-  onHoldListArray = [];
 
-  for (let i=0; i < backlogList.children.length; i++){
-    backlogListArray.push(backlogList.children[i].textContent);
-  }
+  //Common pattern if we want to map empty array with for loop
+ //Mapping over object that is not iterable is not allowed, since backlogList.children is part of HTMLCollection which is an array like object but not array. Hence we need to convet the listArrays.children to the array using Array.from() method.
+ 
+  backlogListArray = Array.from(backlogList.children.map(i => i.textContent));
+  progressListArray = Array.from(progressList.children.map(i => i.textContent));
+  completeListArray = Array.from(completeList.children.map(i => i.textContent));
+  onHoldListArray = Array.from(onHoldList.children.map(i => i.textContent));
 
-  for (let i=0; i < progressList.children.length; i++){
-    progressListArray.push(progressList.children[i].textContent);
-  }
+  // backlogListArray = [];
+  // progressListArray = [];
+  // completeListArray = [];
+  // onHoldListArray = [];
 
-  for (let i=0; i < completeList.children.length; i++){
-    completeListArray.push(completeList.children[i].textContent);
-  }
+  // for (let i=0; i < backlogList.children.length; i++){
+  //   backlogListArray.push(backlogList.children[i].textContent);
+  // }
 
-  for (let i=0; i < onHoldList.children.length; i++){
-    onHoldListArray.push(onHoldList.children[i].textContent);
-  }
+  // for (let i=0; i < progressList.children.length; i++){
+  //   progressListArray.push(progressList.children[i].textContent);
+  // }
+
+  // for (let i=0; i < completeList.children.length; i++){
+  //   completeListArray.push(completeList.children[i].textContent);
+  // }
+
+  // for (let i=0; i < onHoldList.children.length; i++){
+  //   onHoldListArray.push(onHoldList.children[i].textContent);
+  // }
 
   updateDOM();
 }
